@@ -14,6 +14,11 @@ public class SpringFargatePipelineCdkApplication {
 	}
 	
 	public static void main(String[] args) {
-		SpringApplication.run(SpringFargatePipelineCdkApplication.class, args);
+		if (System.getenv("RUN_CDK") != null) {
+			CdkApp.main(args);
+		}
+		else {
+			SpringApplication.run(SpringFargatePipelineCdkApplication.class, args);
+		}
 	}
 }

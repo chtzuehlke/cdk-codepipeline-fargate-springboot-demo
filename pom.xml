@@ -15,6 +15,7 @@
 	<description>Demo project Spring Boot &amp; Fargate &amp; CDK</description>
 	<properties>
 		<java.version>11</java.version>
+		<cdk.version>1.100.0</cdk.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -27,6 +28,44 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- AWS Cloud Development Kit -->
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>core</artifactId>
+			<version>${cdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>${cdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>codepipeline</artifactId>
+			<version>${cdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>codepipeline-actions</artifactId>
+			<version>${cdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>codecommit-codepipeline</artifactId>
+			<version>0.8.1</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>codebuild</artifactId>
+			<version>${cdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awscdk</groupId>
+			<artifactId>codecommit</artifactId>
+			<version>${cdk.version}</version>
+		</dependency>
+		<!-- /AWS Cloud Development Kit -->
 	</dependencies>
 
 	<build>

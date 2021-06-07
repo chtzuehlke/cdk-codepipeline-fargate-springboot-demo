@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+sources.tgz
+buildstack.json
+sources.zip
+cdk.out

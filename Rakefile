@@ -13,14 +13,48 @@ def command(cmd)
   end
 end
 
-desc "Compile and run locally"
-task :runlocal do
-  command "./mvnw clean install"
+desc "Build"
+task :build do
+  command "./mvnw install"
+end
+
+
+desc "Run locally"
+task :run => :build do
   command "java -jar ./target/spring-fargate-pipeline-cdk-0.0.1-SNAPSHOT.jar" 
 end
 
-desc "Compile, build docker image and run locally"
-task :rundockerlocal do
-  command "./mvnw clean install spring-boot:build-image -Dspring-boot.build-image.imageName=springio/gs-spring-boot-docker"
+desc "Build docker image"
+task :dockerbuild do
+  command "./mvnw install spring-boot:build-image -Dspring-boot.build-image.imageName=springio/gs-spring-boot-docker"
+end
+
+desc "Run in docker"
+task :dockerrun => :dockerbuild do
   command "docker run -p 8080:8080 -t springio/gs-spring-boot-docker" 
+end
+
+desc "tar sources"
+task :tarsources do
+  command "jar cvf sources.zip .mvn/ Rakefile cdk.json mvnw pom.xml src/" 
+end
+
+desc "cdk ls"
+task :cdkls => :build do
+  command "cdk ls" 
+end
+
+desc "cdk deploy BuildStack"
+task :cdkdeploybuildstack => :build do
+  command "cdk deploy --require-approval=never --path-metadata false --outputs-file buildstack.json -e BuildStack" 
+end
+
+desc "Upload sources"
+task :uploadsources => :tarsources do
+  command "aws s3 cp sources.zip s3://$(cat buildstack.json | jq -r '.BuildStack.SourceBucketName')/" 
+end
+
+desc "Trigger remote build"
+task :remotebuild => :uploadsources do
+   command "echo FIXME"
 end
