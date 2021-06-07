@@ -26,12 +26,19 @@ end
 
 desc "Build docker image"
 task :dockerbuild do
-  command "./mvnw install spring-boot:build-image -Dspring-boot.build-image.imageName=springio/gs-spring-boot-docker"
+  command "./mvnw install spring-boot:build-image -Dspring-boot.build-image.imageName=furthermore/springdemo"
+end
+
+desc "Push docker image"
+task :dockerpush => :dockerbuild do
+  command "aws ecr get-login-password | docker login --username AWS --password-stdin $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI')"
+  command "docker tag furthermore/springdemo $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):latest"
+  command "docker push $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):latest"
 end
 
 desc "Run in docker"
 task :dockerrun => :dockerbuild do
-  command "docker run -p 8080:8080 -t springio/gs-spring-boot-docker" 
+  command "docker run -p 8080:8080 -t furthermore/springdemo" 
 end
 
 desc "tar sources"
@@ -56,5 +63,5 @@ end
 
 desc "Trigger remote build"
 task :remotebuild => :uploadsources do
-   command "echo FIXME"
+   command "aws codebuild start-build --project-name $(cat buildstack.json | jq -r '.BuildStack.DockerBuildProjectName')"
 end
