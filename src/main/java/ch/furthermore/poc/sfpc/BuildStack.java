@@ -36,9 +36,14 @@ public class BuildStack extends Stack {
 					"phases", Map.of(
 						"build", Map.of(
 							"commands", List.of(
-								"mvn clean install"
+								"nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &",
+								"timeout 15 sh -c \"until docker info; do echo .; sleep 1; done\"",
+								"chmod +x ./mvnw && rake dockerbuild"
 					))))))
-            .environment(BuildEnvironment.builder().buildImage(LinuxBuildImage.STANDARD_5_0).build())
+            .environment(BuildEnvironment.builder()
+            		.buildImage(LinuxBuildImage.STANDARD_5_0)
+            		.privileged(true)
+            		.build())
             .source(Source.s3(S3SourceProps.builder()
             		.bucket(sourceBucket)
             		.path("sources.zip")
