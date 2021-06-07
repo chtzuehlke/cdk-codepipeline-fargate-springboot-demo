@@ -23,23 +23,30 @@ import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.s3.Bucket;
 
 public class BuildStack extends Stack {
-	public BuildStack(final Construct scope, final String id) {
-        this(scope, id, null);
+	private String repositoryUri;
+	private String repositoryArn;
+	
+	public BuildStack(final Construct scope, final String id, final String registryName) {
+        this(scope, id, null, registryName);
     }
 
-	public BuildStack(final Construct scope, final String id, final StackProps props) {
+	public BuildStack(final Construct scope, final String id, final StackProps props, final String registryName) {
         super(scope, id, props);
 
         Repository dockerRepo = Repository.Builder.create(this, "DockerRepository") // FIXME policy to remove <untagged> images
-        	.repositoryName("springdemo")
+        	.repositoryName(registryName)
         	.build();
         
+        setRepositoryUri(dockerRepo.getRepositoryUri());
+        setRepositoryArn(dockerRepo.getRepositoryArn());
         CfnOutput.Builder.create(this, "DockerRepositoryURI").value(dockerRepo.getRepositoryUri()).build();
         
         Bucket sourceBucket = Bucket.Builder.create(this, "SourceBucket")
     		.removalPolicy(RemovalPolicy.DESTROY)
 	        .autoDeleteObjects(true)
         	.build();
+        
+        CfnOutput.Builder.create(this, "SourceBucketName").value(sourceBucket.getBucketName()).build();
         
         Bucket cacheBucket = Bucket.Builder.create(this, "CacheBucket")
         		.removalPolicy(RemovalPolicy.DESTROY)
@@ -82,7 +89,22 @@ public class BuildStack extends Stack {
     	        .resources(Arrays.asList(dockerRepo.getRepositoryArn()))
     	        .build());
         
-        CfnOutput.Builder.create(this, "SourceBucketName").value(sourceBucket.getBucketName()).build();
         CfnOutput.Builder.create(this, "DockerBuildProjectName").value(dockerBuildProject.getProjectName()).build();
     }
+	
+	public String getRepositoryArn() {
+		return repositoryArn;
+	}
+
+	public void setRepositoryArn(String repositoryArn) {
+		this.repositoryArn = repositoryArn;
+	}
+
+	public String getRepositoryUri() {
+		return repositoryUri;
+	}
+
+	public void setRepositoryUri(String repositoryUri) {
+		this.repositoryUri = repositoryUri;
+	}
 }

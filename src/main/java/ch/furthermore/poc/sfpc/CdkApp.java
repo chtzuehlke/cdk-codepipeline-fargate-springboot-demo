@@ -7,8 +7,10 @@ public class CdkApp {
     public static void main(final String[] args) {
         App app = new App();
 
-        new BuildStack(app, "BuildStack", StackProps.builder().build());
+        BuildStack buildStack = new BuildStack(app, "BuildStack", StackProps.builder().build(), "springdemo");
 
+        new FargateStack(app, "FargateDevStack", StackProps.builder().build(), buildStack.getRepositoryUri(), buildStack.getRepositoryArn());
+        
         app.synth();
     }
 }

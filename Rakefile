@@ -64,3 +64,8 @@ desc "Trigger remote build (depends on buildstack.json)"
 task :remotebuild => :uploadsources do
    command "aws codebuild start-build --project-name $(cat buildstack.json | jq -r '.BuildStack.DockerBuildProjectName')"
 end
+
+desc "cdk deploy FargateDevStack"
+task :cdkdeploydevstack => :build do
+  command "cdk deploy --require-approval=never --path-metadata false --outputs-file devstack.json -e FargateDevStack" 
+end
