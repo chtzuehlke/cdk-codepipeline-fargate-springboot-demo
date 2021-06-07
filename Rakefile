@@ -13,6 +13,12 @@ def command(cmd)
   end
 end
 
+desc "Compile and run locally"
+task :runlocal do
+  command "./mvnw clean install"
+  command "java -jar ./target/spring-fargate-pipeline-cdk-0.0.1-SNAPSHOT.jar" 
+end
+
 desc "Compile, build docker image and run locally"
 task :rundockerlocal do
   command "./mvnw clean install spring-boot:build-image -Dspring-boot.build-image.imageName=springio/gs-spring-boot-docker"
