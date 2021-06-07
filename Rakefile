@@ -28,7 +28,7 @@ task :dockerbuild do
   command "./mvnw install spring-boot:build-image -Dspring-boot.build-image.imageName=furthermore/springdemo"
 end
 
-desc "Push docker image"
+desc "Push docker image (depends on buildstack.json)"
 task :dockerpush => :dockerbuild do
   command "aws ecr get-login-password | docker login --username AWS --password-stdin $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI')"
   command "docker tag furthermore/springdemo $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):latest"
@@ -55,12 +55,12 @@ task :cdkdeploybuildstack => :build do
   command "cdk deploy --require-approval=never --path-metadata false --outputs-file buildstack.json -e BuildStack" 
 end
 
-desc "Upload sources"
+desc "Upload sources (depends on buildstack.json)"
 task :uploadsources => :tarsources do
   command "aws s3 cp sources.zip s3://$(cat buildstack.json | jq -r '.BuildStack.SourceBucketName')/" 
 end
 
-desc "Trigger remote build"
+desc "Trigger remote build (depends on buildstack.json)"
 task :remotebuild => :uploadsources do
    command "aws codebuild start-build --project-name $(cat buildstack.json | jq -r '.BuildStack.DockerBuildProjectName')"
 end
