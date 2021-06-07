@@ -46,7 +46,7 @@ public class BuildStack extends Stack {
     	        .autoDeleteObjects(true)
             	.build();
             
-        Project dockerBuildProject = Project.Builder.create(this, "SpringdemoDockerBuild") // FIXME caching (.m2 repo, downloaded docker image deps)
+        Project dockerBuildProject = Project.Builder.create(this, "SpringdemoDockerBuild") 
     		.buildSpec(BuildSpec.fromObjectToYaml(Map.of(
 					"version", "0.2",
 					"cache", Map.of(
