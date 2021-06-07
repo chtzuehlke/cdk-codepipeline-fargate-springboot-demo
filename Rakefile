@@ -18,7 +18,6 @@ task :build do
   command "./mvnw install"
 end
 
-
 desc "Run locally"
 task :run => :build do
   command "java -jar ./target/spring-fargate-pipeline-cdk-0.0.1-SNAPSHOT.jar" 
