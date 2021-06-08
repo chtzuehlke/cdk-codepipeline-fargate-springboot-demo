@@ -26,7 +26,7 @@ import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.s3.Bucket;
 
-public class BuildTestPipelineStack extends Stack { // FIXME docker image versioning (i.e. don't just replace latest) _to ensure new app versions will be deployed_
+public class BuildTestPipelineStack extends Stack { 
 	public BuildTestPipelineStack(final Construct scope, final String id, final String registryName) {
         this(scope, id, null, registryName);
     }

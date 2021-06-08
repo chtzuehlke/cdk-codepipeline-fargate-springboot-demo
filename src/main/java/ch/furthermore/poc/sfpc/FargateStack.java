@@ -4,6 +4,7 @@ package ch.furthermore.poc.sfpc;
 import java.util.Arrays;
 
 import software.amazon.awscdk.core.CfnOutput;
+import software.amazon.awscdk.core.CfnParameter;
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Stack;
 import software.amazon.awscdk.core.StackProps;
@@ -26,9 +27,14 @@ public class FargateStack extends Stack {
 	public FargateStack(final Construct scope, final String id, final StackProps props, final String repositoryUri, final String repositoryArn) {
         super(scope, id, props);
 
+        CfnParameter dockerImageVersion = CfnParameter.Builder.create(this, "dockerImageVersion")
+                .type("String")
+                .description("Version of the docker image to be deployed")
+                .build();
+        
         Vpc vpc = Vpc.Builder.create(this, "FargateVPC") 
             .maxAzs(3)
-            .subnetConfiguration(Arrays.asList(SubnetConfiguration.builder() // override default (which creates private subnets for tasks and expensive NAT gateways!)
+            .subnetConfiguration(Arrays.asList(SubnetConfiguration.builder() // override default (which would create private subnets for tasks and expensive NAT gateways!)
         		.cidrMask(24)
         		.subnetType(SubnetType.PUBLIC)
         		.name("public")
@@ -42,7 +48,7 @@ public class FargateStack extends Stack {
 		ApplicationLoadBalancedFargateService service = ApplicationLoadBalancedFargateService.Builder.create(this, "FargateService") 
 	    	.cluster(cluster)           
 	        .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
-	        	.image(ContainerImage.fromRegistry(repositoryUri + ":latest"))
+	        	.image(ContainerImage.fromRegistry(repositoryUri + ":" + dockerImageVersion.getValueAsString())) 
 	        	.containerPort(8080)
 	            .build())
 	        .taskSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())

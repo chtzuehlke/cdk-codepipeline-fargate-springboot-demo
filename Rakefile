@@ -1,4 +1,5 @@
 require 'open3'
+require 'digest/md5'
 
 def command(cmd)
   puts "$ #{cmd}"
@@ -11,6 +12,14 @@ def command(cmd)
     exit_status = wait_thr.value
     abort "FAILED: #{cmd}" unless exit_status.success?
   end
+end
+
+def md5_digest_of_codebuid_codecommit_version
+    if ENV['CODEBUILD_RESOLVED_SOURCE_VERSION'].nil?
+        "latest"
+    else
+        Digest::MD5.hexdigest(ENV['CODEBUILD_RESOLVED_SOURCE_VERSION'])
+    end
 end
 
 desc "Build"
@@ -31,8 +40,8 @@ end
 desc "Push docker image (depends on buildstack.json)"
 task :dockerpush => :dockerbuild do
   command "aws ecr get-login-password | docker login --username AWS --password-stdin $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI')"
-  command "docker tag furthermore/springdemo $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):latest"
-  command "docker push $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):latest"
+  command "docker tag furthermore/springdemo $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):#{ md5_digest_of_codebuid_codecommit_version }"
+  command "docker push $(cat buildstack.json | jq -r '.BuildStack.DockerRepositoryURI'):#{ md5_digest_of_codebuid_codecommit_version }"
 end
 
 desc "Run in docker"
@@ -67,7 +76,7 @@ end
 
 desc "cdk deploy FargateDevStack"
 task :cdkdeploydevstack => :build do
-  command "cdk deploy --require-approval=never --path-metadata false --outputs-file devstack.json -e FargateDevStack" 
+  command "cdk deploy --require-approval=never --path-metadata false --parameters dockerImageVersion=#{ md5_digest_of_codebuid_codecommit_version } --outputs-file devstack.json -e FargateDevStack" 
 end
 
 desc "cdk deploy PipelineStack"
