@@ -7,11 +7,9 @@ public class CdkApp {
     public static void main(final String[] args) {
         App app = new App();
 
-        BuildStack buildStack = new BuildStack(app, "BuildStack", StackProps.builder().build(), "springdemo");
-
-        new FargateStack(app, "FargateDevStack", StackProps.builder().build(), buildStack.getRepositoryUri(), buildStack.getRepositoryArn());
+        new BuildTestPipelineStack(app, "Pipeline", StackProps.builder().build(), "springdemo");
         
-        new BuildTestPipelineStack(app, "PipelineStack", StackProps.builder().build(), "springdemo");
+        new FargateStack(app, "FargateDev", StackProps.builder().build());
         
         app.synth();
     }

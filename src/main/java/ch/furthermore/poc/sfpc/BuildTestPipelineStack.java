@@ -20,28 +20,30 @@ import software.amazon.awscdk.services.codepipeline.Pipeline;
 import software.amazon.awscdk.services.codepipeline.StageProps;
 import software.amazon.awscdk.services.codepipeline.actions.CodeBuildAction;
 import software.amazon.awscdk.services.codepipeline.actions.S3SourceAction;
-import software.amazon.awscdk.services.ecr.IRepository;
 import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.s3.Bucket;
 
 public class BuildTestPipelineStack extends Stack { 
-	public BuildTestPipelineStack(final Construct scope, final String id, final String registryName) {
-        this(scope, id, null, registryName);
+	public BuildTestPipelineStack(final Construct scope, final String id, final String ecrRepositoryName) {
+        this(scope, id, null, ecrRepositoryName);
     }
 
-	public BuildTestPipelineStack(final Construct scope, final String id, final StackProps props, final String registryName) {
+	public BuildTestPipelineStack(final Construct scope, final String id, final StackProps props, final String ecrRepositoryName) {
         super(scope, id, props);
 
-        IRepository dockerRepo = Repository.fromRepositoryName(this, "DockerRepository", registryName);
+        Repository dockerRepo = Repository.Builder.create(this, "DockerRepository") // FIXME policy to remove <untagged> images
+            	.repositoryName(ecrRepositoryName)
+            	.build();
+        CfnOutput.Builder.create(this, "DockerRepositoryURI").value(dockerRepo.getRepositoryUri()).build();
+        CfnOutput.Builder.create(this, "DockerRepositoryARN").value(dockerRepo.getRepositoryArn()).build();
         
         Bucket sourceBucket = Bucket.Builder.create(this, "SourceBucket")
     		.removalPolicy(RemovalPolicy.DESTROY)
 	        .autoDeleteObjects(true)
 	        .versioned(true)
         	.build();
-        
         CfnOutput.Builder.create(this, "SourceBucketName").value(sourceBucket.getBucketName()).build();
         
         Bucket cacheBucket = Bucket.Builder.create(this, "CacheBucket")
@@ -49,7 +51,7 @@ public class BuildTestPipelineStack extends Stack {
 	        .autoDeleteObjects(true)
         	.build();
             
-        PipelineProject dockerBuildProject = PipelineProject.Builder.create(this, "SpringdemoDockerBuild")
+        PipelineProject dockerBuildProject = PipelineProject.Builder.create(this, "DockerBuild")
     		.buildSpec(BuildSpec.fromObjectToYaml(Map.of(
 				"version", "0.2",
 				"cache", Map.of(
@@ -61,8 +63,7 @@ public class BuildTestPipelineStack extends Stack {
 						"commands", List.of(
 							"nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &",
 							"timeout 15 sh -c \"until docker info; do echo .; sleep 1; done\"",
-							"echo '{\"BuildStack\":{\"DockerRepositoryURI\":\"" + dockerRepo.getRepositoryUri() + "\"}}' > buildstack.json", // FIXME better approach (that supports local build and codebuild)
-							"chmod +x ./mvnw && rake dockerpush"
+							"chmod +x ./mvnw && DOCKER_REPOSITORY_URI=" + dockerRepo.getRepositoryUri() + " rake dockerpush"
 				))))))
             .environment(BuildEnvironment.builder()
         		.buildImage(LinuxBuildImage.STANDARD_5_0)
@@ -81,7 +82,7 @@ public class BuildTestPipelineStack extends Stack {
     	        .resources(Arrays.asList(dockerRepo.getRepositoryArn()))
     	        .build());
         
-        PipelineProject cdkDeployBuildProject = PipelineProject.Builder.create(this, "SpringdemoCdkDeploy")
+        PipelineProject cdkDeployBuildProject = PipelineProject.Builder.create(this, "CdkDeploy") // FIXME "Maximum builds allowed in batch" = 1
     		.buildSpec(BuildSpec.fromObjectToYaml(Map.of(
 				"version", "0.2",
 				"cache", Map.of(
@@ -92,7 +93,7 @@ public class BuildTestPipelineStack extends Stack {
 					"build", Map.of(
 						"commands", List.of(
 							"npm install -g aws-cdk",
-							"chmod +x ./mvnw && rake cdkdeploydevstack"
+							"chmod +x ./mvnw && DOCKER_REPOSITORY_URI=" + dockerRepo.getRepositoryUri() + " DOCKER_REPOSITORY_ARN=" + dockerRepo.getRepositoryArn() + " rake cdkdeployfargatedev" 
 				))))))
             .environment(BuildEnvironment.builder()
         		.buildImage(LinuxBuildImage.STANDARD_5_0)
@@ -110,7 +111,7 @@ public class BuildTestPipelineStack extends Stack {
 	        .autoDeleteObjects(true)
         	.build();
 		Artifact sourceOutput = new Artifact();
-        Pipeline pipeline = Pipeline.Builder.create(this, "SpringdemoPipeline")
+        Pipeline pipeline = Pipeline.Builder.create(this, "BuildDeployTest")
         	.artifactBucket(artifactBucket)
             .stages(Arrays.asList(
                 StageProps.builder()
@@ -149,9 +150,9 @@ public class BuildTestPipelineStack extends Stack {
    	        .resources(Arrays.asList(sourceBucket.getBucketArn()))
    	        .build());
        pipeline.addToRolePolicy(PolicyStatement.Builder.create() //FIXME least privilege
-      	        .effect(Effect.ALLOW)
-      	        .actions(Arrays.asList("s3:*"))
-      	        .resources(Arrays.asList(sourceBucket.getBucketArn() + "/*"))
-      	        .build());
+  	        .effect(Effect.ALLOW)
+  	        .actions(Arrays.asList("s3:*"))
+  	        .resources(Arrays.asList(sourceBucket.getBucketArn() + "/*"))
+  	        .build());
     }
 }

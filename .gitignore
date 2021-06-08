@@ -37,3 +37,5 @@ sources.zip
 cdk.out
 devstack.json
 pipelinestack.json
+fargatedev.json
+pipeline.json

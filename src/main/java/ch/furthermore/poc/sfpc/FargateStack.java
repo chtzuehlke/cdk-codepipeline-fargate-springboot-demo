@@ -3,7 +3,6 @@ package ch.furthermore.poc.sfpc;
 
 import java.util.Arrays;
 
-import software.amazon.awscdk.core.CfnOutput;
 import software.amazon.awscdk.core.CfnParameter;
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Stack;
@@ -20,21 +19,31 @@ import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 
 public class FargateStack extends Stack {
-	public FargateStack(final Construct scope, final String id, final String repositoryUri, final String repositoryArn) {
-        this(scope, id, null, repositoryUri, repositoryArn);
+	public FargateStack(final Construct scope, final String id) {
+        this(scope, id, null);
     }
 
-	public FargateStack(final Construct scope, final String id, final StackProps props, final String repositoryUri, final String repositoryArn) {
+	public FargateStack(final Construct scope, final String id, final StackProps props) {
         super(scope, id, props);
 
+        CfnParameter repositoryArn = CfnParameter.Builder.create(this, "repositoryArn")
+                .type("String")
+                .description("ECR Repository ARN")
+                .build();
+        
+        CfnParameter repositoryUri = CfnParameter.Builder.create(this, "repositoryUri")
+                .type("String")
+                .description("ECR Repository URI")
+                .build();
+        
         CfnParameter dockerImageVersion = CfnParameter.Builder.create(this, "dockerImageVersion")
                 .type("String")
-                .description("Version of the docker image to be deployed")
+                .description("ECR Repository URI")
                 .build();
         
         Vpc vpc = Vpc.Builder.create(this, "FargateVPC") 
             .maxAzs(3)
-            .subnetConfiguration(Arrays.asList(SubnetConfiguration.builder() // override default (which would create private subnets for tasks and expensive NAT gateways!)
+            .subnetConfiguration(Arrays.asList(SubnetConfiguration.builder()
         		.cidrMask(24)
         		.subnetType(SubnetType.PUBLIC)
         		.name("public")
@@ -45,10 +54,10 @@ public class FargateStack extends Stack {
 			.vpc(vpc)
 			.build();
 		
-		ApplicationLoadBalancedFargateService service = ApplicationLoadBalancedFargateService.Builder.create(this, "FargateService") 
+		ApplicationLoadBalancedFargateService service = ApplicationLoadBalancedFargateService.Builder.create(this, "FargateService") // FIXME tweak min/max percentages and "cooldown" times to speedup re-deployment
 	    	.cluster(cluster)           
 	        .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
-	        	.image(ContainerImage.fromRegistry(repositoryUri + ":" + dockerImageVersion.getValueAsString())) 
+	        	.image(ContainerImage.fromRegistry(repositoryUri.getValueAsString() + ":" + dockerImageVersion.getValueAsString())) 
 	        	.containerPort(8080)
 	            .build())
 	        .taskSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
@@ -67,9 +76,7 @@ public class FargateStack extends Stack {
 		service.getService().getTaskDefinition().addToExecutionRolePolicy(PolicyStatement.Builder.create()
     	        .effect(Effect.ALLOW)
     	        .actions(Arrays.asList("ecr:BatchCheckLayerAvailability", "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"))
-    	        .resources(Arrays.asList(repositoryArn))
+    	        .resources(Arrays.asList(repositoryArn.getValueAsString()))
     	        .build());
-		
-		CfnOutput.Builder.create(this, "FargateServiceURL").value(service.getLoadBalancer().getLoadBalancerDnsName()).build();
     }
 }
