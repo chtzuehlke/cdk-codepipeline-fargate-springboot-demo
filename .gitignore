@@ -36,3 +36,4 @@ buildstack.json
 sources.zip
 cdk.out
 devstack.json
+pipelinestack.json

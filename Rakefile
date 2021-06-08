@@ -55,8 +55,8 @@ task :cdkdeploybuildstack => :build do
   command "cdk deploy --require-approval=never --path-metadata false --outputs-file buildstack.json -e BuildStack" 
 end
 
-desc "Upload sources (depends on buildstack.json)"
-task :uploadsources => :tarsources do
+desc "Upload sources for build (depends on buildstack.json)"
+task :uploadsourcesbuild => :tarsources do
   command "aws s3 cp sources.zip s3://$(cat buildstack.json | jq -r '.BuildStack.SourceBucketName')/" 
 end
 
@@ -68,4 +68,14 @@ end
 desc "cdk deploy FargateDevStack"
 task :cdkdeploydevstack => :build do
   command "cdk deploy --require-approval=never --path-metadata false --outputs-file devstack.json -e FargateDevStack" 
+end
+
+desc "cdk deploy PipelineStack"
+task :cdkdeploypipelinestack => :build do
+  command "cdk deploy --require-approval=never --path-metadata false --outputs-file pipelinestack.json -e PipelineStack" 
+end
+
+desc "Upload sources for pipeline (depends on buildstack.json)"
+task :uploadsourcespipeline => :tarsources do
+  command "aws s3 cp sources.zip s3://$(cat pipelinestack.json | jq -r '.PipelineStack.SourceBucketName')/" 
 end

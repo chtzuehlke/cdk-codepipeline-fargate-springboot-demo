@@ -11,6 +11,8 @@ public class CdkApp {
 
         new FargateStack(app, "FargateDevStack", StackProps.builder().build(), buildStack.getRepositoryUri(), buildStack.getRepositoryArn());
         
+        new BuildTestPipelineStack(app, "PipelineStack", StackProps.builder().build(), "springdemo");
+        
         app.synth();
     }
 }

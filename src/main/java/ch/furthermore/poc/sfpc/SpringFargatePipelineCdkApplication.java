@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SpringFargatePipelineCdkApplication {
 	@GetMapping("/")
 	public String hello() {
-		return "world";
+		return "Hello World";
 	}
 	
 	public static void main(String[] args) {
