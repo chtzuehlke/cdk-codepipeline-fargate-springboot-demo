@@ -22,7 +22,7 @@ import software.amazon.awscdk.services.iam.Effect;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.s3.Bucket;
 
-public class BuildStack extends Stack {
+public class BuildStack extends Stack { // FIXME docker image versioning (i.e. don't just replace latest)
 	private String repositoryUri;
 	private String repositoryArn;
 	
@@ -65,7 +65,7 @@ public class BuildStack extends Stack {
 							"commands", List.of(
 								"nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &",
 								"timeout 15 sh -c \"until docker info; do echo .; sleep 1; done\"",
-								"echo '{\"BuildStack\":{\"DockerRepositoryURI\":\"" + dockerRepo.getRepositoryUri() + "\"}}' > buildstack.json", // FIXME
+								"echo '{\"BuildStack\":{\"DockerRepositoryURI\":\"" + dockerRepo.getRepositoryUri() + "\"}}' > buildstack.json", // FIXME better approach (that supports local build and codebuild)
 								"chmod +x ./mvnw && rake dockerpush"
 					))))))
             .environment(BuildEnvironment.builder()
@@ -85,7 +85,7 @@ public class BuildStack extends Stack {
     	        .build());
         dockerBuildProject.addToRolePolicy(PolicyStatement.Builder.create()
     	        .effect(Effect.ALLOW)
-    	        .actions(Arrays.asList("ecr:*"))
+    	        .actions(Arrays.asList("ecr:*")) // FIXME least privilege
     	        .resources(Arrays.asList(dockerRepo.getRepositoryArn()))
     	        .build());
         

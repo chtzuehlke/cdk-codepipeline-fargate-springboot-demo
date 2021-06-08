@@ -2,7 +2,6 @@ package ch.furthermore.poc.sfpc;
 
 
 import java.util.Arrays;
-import java.util.Map;
 
 import software.amazon.awscdk.core.CfnOutput;
 import software.amazon.awscdk.core.Construct;
@@ -51,7 +50,7 @@ public class FargateStack extends Stack {
 	        .cpu(256)                   
 	        .memoryLimitMiB(1024)       
 	        .publicLoadBalancer(true)
-	        .assignPublicIp(true) //??
+	        .assignPublicIp(true) 
 	        .listenerPort(80)
 	        .build();
 		service.getService().getTaskDefinition().addToExecutionRolePolicy(PolicyStatement.Builder.create()
