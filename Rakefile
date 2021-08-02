@@ -59,6 +59,11 @@ task :dockerpush => :dockerbuild do
   command "docker push $DOCKER_REPOSITORY_URI:#{ md5_digest_of_codebuid_codecommit_version }"
 end
 
+desc "bootstrap cdk (once per account & region)"
+task :cdkbootstrap do
+  command "cdk bootstrap" 
+end
+
 desc "cdk deploy FargateDev (expects DOCKER_REPOSITORY_URI and DOCKER_REPOSITORY_ARN and optionally CODEBUILD_RESOLVED_SOURCE_VERSION)"
 task :cdkdeployfargatedev => :build do
   command "cdk deploy --require-approval=never --path-metadata false --parameters dockerImageVersion=#{ md5_digest_of_codebuid_codecommit_version } --parameters repositoryArn=$DOCKER_REPOSITORY_ARN --parameters repositoryUri=$DOCKER_REPOSITORY_URI --outputs-file fargatedev.json -e FargateDev" 
@@ -74,9 +79,9 @@ task :uploadsourcespipeline => :tarsources do
   command "aws s3 cp sources.zip s3://$(aws cloudformation describe-stacks --stack-name Pipeline --query \"Stacks[0].Outputs[?OutputKey=='SourceBucketName'].OutputValue\" --output text)/" 
 end
 
-desc "Invoke deployed service endpoint"
-task :curl do
-  command "curl -s -v http://$(aws cloudformation describe-stacks --stack-name FargateDev --query \"Stacks[0].Outputs[?OutputKey=='LoadBalancerDnsName'].OutputValue\" --output text)/" 
+desc "Continuous call of the provided service endpoint"
+task :continuouscurl do
+  command "java -DSERVICE_URI=http://$(aws cloudformation describe-stacks --stack-name FargateDev --query \"Stacks[0].Outputs[?OutputKey=='LoadBalancerDnsName'].OutputValue\" --output text)/ -cp target/classes/ ch.furthermore.poc.sfpc.SimplisticClient" 
 end
 
 desc "Delete FargateDev stack"

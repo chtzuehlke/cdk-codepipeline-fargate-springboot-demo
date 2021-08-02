@@ -63,6 +63,8 @@ public class FargateStack extends Stack {
 	            .build())
 	        .taskSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
 	        .desiredCount(1)
+	        .minHealthyPercent(100)
+	        .maxHealthyPercent(200)
 	        .cpu(256)                   
 	        .memoryLimitMiB(1024)       
 	        .publicLoadBalancer(true)

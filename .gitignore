@@ -39,3 +39,4 @@ devstack.json
 pipelinestack.json
 fargatedev.json
 pipeline.json
+env.sh
