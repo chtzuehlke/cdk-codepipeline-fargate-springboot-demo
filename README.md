@@ -7,12 +7,10 @@ Preconditions
 - Unix-like environment (tested with macOS)
 - AWS CLI, AWS CDK, JDK 11, maven, docker, ruby/rake and curl installed
 
-AWS CLI config
+Setup
 
     export AWS_PROFILE=...
     export AWS_DEFAULT_REGION=...
-
-Setup
 
     # Bootstrap CDK (once)
     rake cdkbootstrap
@@ -20,7 +18,7 @@ Setup
     # Create build & deploy pipeline (once)
     rake cdkdeploypipeline
 
-    # Trigger build & deploy pipeline by zipping and uploading the sources - would be a "git push" (or PR merge) in real world
+    # Initial trigger of the build & deploy pipeline (deploy initial app version)
     rake uploadsourcespipeline
 
 Test
@@ -28,12 +26,14 @@ Test
     # Send test requests (~ensure one request is in flight all the time)
     rake continuouscurl
 
-Test II
+Test 2 (2nd console)
 
     export AWS_PROFILE=...
     export AWS_DEFAULT_REGION=...
 
-    # Make app change and deploy new version in 2nd terminal
+    # [TODO] Make change to app (e.g. return different string)
+
+    # 2nd trigger of the build & deploy pipeline (deploy new app version)
     rake uploadsourcespipeline
 
 Teardown
