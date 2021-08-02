@@ -52,7 +52,6 @@ task :dockerrun => :dockerbuild do
   command "docker run -p 8080:8080 -t furthermore/springdemo" 
 end
 
-# FIXME: does not seem to work (realiabbly) locally (macOS) - uploaded image is (sometimes) 69.72 MB vs. 123.64 MB if triggered by CodeBuild (???)
 desc "Push docker image (expects DOCKER_REPOSITORY_URI and optionally CODEBUILD_RESOLVED_SOURCE_VERSION)"
 task :dockerpush => :dockerbuild do
   command "aws ecr get-login-password | docker login --username AWS --password-stdin $DOCKER_REPOSITORY_URI"
@@ -73,6 +72,11 @@ end
 desc "Upload sources to trigger pipeline"
 task :uploadsourcespipeline => :tarsources do
   command "aws s3 cp sources.zip s3://$(aws cloudformation describe-stacks --stack-name Pipeline --query \"Stacks[0].Outputs[?OutputKey=='SourceBucketName'].OutputValue\" --output text)/" 
+end
+
+desc "Invoke deployed service endpoint"
+task :curl do
+  command "curl -s -v http://$(aws cloudformation describe-stacks --stack-name FargateDev --query \"Stacks[0].Outputs[?OutputKey=='LoadBalancerDnsName'].OutputValue\" --output text)/" 
 end
 
 desc "Delete FargateDev stack"

@@ -33,7 +33,7 @@ public class BuildTestPipelineStack extends Stack {
 	public BuildTestPipelineStack(final Construct scope, final String id, final StackProps props, final String ecrRepositoryName) {
         super(scope, id, props);
 
-        Repository dockerRepo = Repository.Builder.create(this, "DockerRepository") // FIXME policy to remove <untagged> images
+        Repository dockerRepo = Repository.Builder.create(this, "DockerRepository") 
             	.repositoryName(ecrRepositoryName)
             	.build();
         CfnOutput.Builder.create(this, "DockerRepositoryURI").value(dockerRepo.getRepositoryUri()).build();
@@ -82,7 +82,7 @@ public class BuildTestPipelineStack extends Stack {
     	        .resources(Arrays.asList(dockerRepo.getRepositoryArn()))
     	        .build());
         
-        PipelineProject cdkDeployBuildProject = PipelineProject.Builder.create(this, "CdkDeploy") // FIXME "Maximum builds allowed in batch" = 1
+        PipelineProject cdkDeployBuildProject = PipelineProject.Builder.create(this, "CdkDeploy") 
     		.buildSpec(BuildSpec.fromObjectToYaml(Map.of(
 				"version", "0.2",
 				"cache", Map.of(

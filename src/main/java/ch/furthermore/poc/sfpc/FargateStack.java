@@ -3,6 +3,7 @@ package ch.furthermore.poc.sfpc;
 
 import java.util.Arrays;
 
+import software.amazon.awscdk.core.CfnOutput;
 import software.amazon.awscdk.core.CfnParameter;
 import software.amazon.awscdk.core.Construct;
 import software.amazon.awscdk.core.Stack;
@@ -54,7 +55,7 @@ public class FargateStack extends Stack {
 			.vpc(vpc)
 			.build();
 		
-		ApplicationLoadBalancedFargateService service = ApplicationLoadBalancedFargateService.Builder.create(this, "FargateService") // FIXME tweak min/max percentages and "cooldown" times to speedup re-deployment
+		ApplicationLoadBalancedFargateService service = ApplicationLoadBalancedFargateService.Builder.create(this, "FargateService") 
 	    	.cluster(cluster)           
 	        .taskImageOptions(ApplicationLoadBalancedTaskImageOptions.builder()
 	        	.image(ContainerImage.fromRegistry(repositoryUri.getValueAsString() + ":" + dockerImageVersion.getValueAsString())) 
@@ -78,5 +79,7 @@ public class FargateStack extends Stack {
     	        .actions(Arrays.asList("ecr:BatchCheckLayerAvailability", "ecr:GetDownloadUrlForLayer", "ecr:BatchGetImage"))
     	        .resources(Arrays.asList(repositoryArn.getValueAsString()))
     	        .build());
+		
+		CfnOutput.Builder.create(this, "LoadBalancerDnsName").value(service.getLoadBalancer().getLoadBalancerDnsName()).build();
     }
 }
