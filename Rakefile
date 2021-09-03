@@ -60,7 +60,7 @@ task :dockerpush => :dockerbuild do
 end
 
 desc "bootstrap cdk (once per account & region)"
-task :cdkbootstrap do
+task :cdkbootstrap => :build do
   command "cdk bootstrap" 
 end
 
